@@ -172,6 +172,34 @@ def scrape_sound_pages(pages_file_path, destination):
         n += 1
 
 
+def parse_sound_pages(source_folder, destination):
+    """
+    I parse a sound file pages collection and create a csv file of sounds files
+    download urls.
+
+    Args:
+        source_folder (str): sounds files pages folder.
+        destination (str): destination path for csv file.
+    Returns:
+        None.
+    """
+    # get pages files paths
+    pages_files_names = glob.glob(source_folder + '*.html')
+
+    # parse sound pages for sound download links
+    print('\nParsing sound pages...')
+    with open(destination + 'download_urls.csv', mode='w') as urls_file:
+        writer = csv.writer(urls_file)
+
+        for page_file_name in tqdm(pages_files_names):
+            with open(page_file_name, mode='r') as page_file:
+                soup = BeautifulSoup(page_file, 'lxml')
+                download_link = soup.find('div', attrs={'id':'download'})\
+                                    .a.get('href')
+                download_link = BASE_URL + download_link
+                writer.writerow([download_link])
+
+
 def scrape(config_path):
     """
     Runs a scrapping session.
@@ -199,7 +227,10 @@ def scrape(config_path):
 
     # scrape sound files pages
     scrape_sound_pages(base_folder + 'sound_pages_urls.csv',
-                       sounds_pages_folder) 
+                       sounds_pages_folder)
+
+    # parse sound pages
+    parse_sound_pages(sounds_pages_folder, base_folder)
 
 
 scrape('../config.json')
