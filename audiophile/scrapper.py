@@ -122,7 +122,7 @@ def scrape_indexes(query, query_type, n_pages, destination):
 
 def parse_indexes(source_folder, destination):
     """
-    Parse indexes pages in a folder for audio pages urls and store in a csv
+    Parses pages in a folder for audio pages urls and store in a csv
     file.
 
     Args:
@@ -150,7 +150,7 @@ def parse_indexes(source_folder, destination):
 
 def scrape_sound_pages(pages_file_path, destination):
     """
-    I scrape sound track pages.
+    Scrapes sound track pages.
 
     Args:
         pages_file_path (str): path of urls source file.
@@ -164,7 +164,7 @@ def scrape_sound_pages(pages_file_path, destination):
         urls = list(reader)
 
     # scrape sound track pages
-    n = 0
+    n = 1
     print('\nScraping sound pages...')
     for url in tqdm(urls):
         page = get_page(url[0])
@@ -174,7 +174,7 @@ def scrape_sound_pages(pages_file_path, destination):
 
 def parse_sound_pages(source_folder, destination):
     """
-    I parse a sound file pages collection and create a csv file of sounds files
+    Parses a sound file pages collection and create a csv file of sounds files
     download urls.
 
     Args:
@@ -200,6 +200,39 @@ def parse_sound_pages(source_folder, destination):
                 writer.writerow([download_link])
 
 
+def download_sound_files(urls_source, formats, auth, destination):
+    """
+    Downloads sound files.
+
+    Args:
+        urls_file (str): path of csv containing file urls.
+        formats (list): desired file formats.
+        auth (dict): access cookies.
+        destination (str): files destination folder path.
+    Returns:
+        None.
+    """
+    # get urls
+    with open(urls_source) as urls_file:
+        reader = csv.reader(urls_file)
+        urls = list(reader)
+
+    # download audio files
+    n = 1
+    print('\nDownloading audio files....')
+    for url in tqdm(urls):
+        format = url[0].split('.')[-1]
+        if format in formats:
+            audio = requests.get(url[0],
+                                 cookies= {
+                                            'csrftoken': auth['csrf'],
+                                            'sessionid': auth['session']
+                                          })
+            with open(destination + f'sound{n}.{format}', mode='wb') as file:
+                file.write(audio.content)
+                n += 1
+
+
 def scrape(config_path):
     """
     Runs a scrapping session.
@@ -216,6 +249,7 @@ def scrape(config_path):
     base_folder = '../data/{}/'.format(parameters['query'])
     indexes_folder = base_folder + 'pages/indexes/'
     sounds_pages_folder = base_folder + 'pages/results/'
+    audio_folder = base_folder + 'audio/'
     create_data_folders(base_folder)
 
     # scrape search results pages
@@ -231,6 +265,11 @@ def scrape(config_path):
 
     # parse sound pages
     parse_sound_pages(sounds_pages_folder, base_folder)
+
+    # download sounds
+    download_sound_files(base_folder + 'download_urls.csv',
+                         parameters['formats'], parameters['auth'],
+                         audio_folder)
 
 
 scrape('../config.json')
