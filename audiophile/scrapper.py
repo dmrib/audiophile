@@ -16,6 +16,7 @@ BASE_URL = 'https://freesound.org'
 SEARCH_QUERY = 'https://freesound.org/search/?q={}&page={}#sound'
 TAGS_QUERY = 'https://freesound.org/browse/tags/{}/?page={}#sound'
 INDEX_FILE_NAME = 'index_{}.html'
+SOUND_FILE_NAME = 'sound_page_{}.html'
 
 
 def get_page(url):
@@ -27,6 +28,7 @@ def get_page(url):
     Returns:
         html (str): page html code
     """
+    # request HTML page
     response = requests.get(url)
     html = response.text
 
@@ -43,6 +45,7 @@ def save_page(page, file_name):
     Returns:
         None.
     """
+    # save HTML page
     with open(file_name, mode='w') as file:
         file.write(page)
 
@@ -110,7 +113,7 @@ def scrape_indexes(query, query_type, n_pages, destination):
         base_url = TAGS_QUERY
 
     # scrape search result pages
-    print('Scraping indexes...')
+    print('\nScraping indexes...')
     for page_number in tqdm(range(1, n_pages + 1)):
         url = base_url.format(query, page_number)
         page = get_page(url)
@@ -131,17 +134,42 @@ def parse_indexes(source_folder, destination):
     # get search results pages files paths
     pages_file_names = glob.glob(source_folder + '*.html')
 
-    # parse search results pages for sound files pages
-    print('Parsing indexes pages...')
+    # parse search results pages for sound files pages and creates csv
+    print('\nParsing indexes pages...')
     with open(destination + '/sound_pages_urls.csv', mode='w') as urls_file:
         writer = csv.writer(urls_file)
 
         for page_file_name in tqdm(pages_file_names):
             with open(page_file_name, mode='r') as page_file:
                 soup = BeautifulSoup(page_file, 'lxml')
+
                 for url in soup.findAll('a', attrs={'class': 'title'}):
                     page_url = [BASE_URL + url.get('href')]
                     writer.writerow(page_url)
+
+
+def scrape_sound_pages(pages_file_path, destination):
+    """
+    I scrape sound track pages.
+
+    Args:
+        pages_file_path (str): path of urls source file.
+        destination (str): destination path for scrapped pages.
+    Returns:
+        None.
+    """
+    # get url list from csv file
+    with open(pages_file_path, 'r') as urls_file:
+        reader = csv.reader(urls_file)
+        urls = list(reader)
+
+    # scrape sound track pages
+    n = 0
+    print('\nScraping sound pages...')
+    for url in tqdm(urls):
+        page = get_page(url[0])
+        save_page(page, destination + SOUND_FILE_NAME.format(n))
+        n += 1
 
 
 def scrape(config_path):
@@ -159,6 +187,7 @@ def scrape(config_path):
     # create data and pages cache destination folders
     base_folder = '../data/{}/'.format(parameters['query'])
     indexes_folder = base_folder + 'pages/indexes/'
+    sounds_pages_folder = base_folder + 'pages/results/'
     create_data_folders(base_folder)
 
     # scrape search results pages
@@ -167,6 +196,10 @@ def scrape(config_path):
 
     # parse search results pages for sound files pages
     parse_indexes(indexes_folder, base_folder)
+
+    # scrape sound files pages
+    scrape_sound_pages(base_folder + 'sound_pages_urls.csv',
+                       sounds_pages_folder) 
 
 
 scrape('../config.json')
