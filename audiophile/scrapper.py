@@ -27,6 +27,35 @@ def load_config(path):
         return config
 
 
+def create_data_folders(path):
+    """
+    I create destination pages cache and audio files folders.
+
+    Args:
+        path (str): folder path
+    Returns:
+        None.
+    """
+    try:
+        # path doesn't exists: create data folders
+        if not os.path.exists(path):
+
+            # create base folder
+            os.mkdir(path)
+
+            # create pages cache folder
+            os.mkdir(path + 'pages/')
+            os.mkdir(path + 'pages/indexes/')
+            os.mkdir(path + 'pages/results/')
+
+            # create audio files folder
+            os.mkdir(path + 'audio/')
+
+    # couldn't create folders: abort and report error
+    except OSError:
+        print(f"Error: couldn't create folder {path} .")
+
+
 def scrape(config_path):
     """
     Runs a scrapping session.
@@ -38,3 +67,6 @@ def scrape(config_path):
     """
     # load session parameters
     parameters = load_config(config_path)
+
+    # create data and pages cache destination folder
+    create_data_folders('./data/')
