@@ -8,12 +8,12 @@ audiophile let you scrape audio files from [FreeSound](https://freesound.org/) d
 
 ### How to use
 
-* Install dependencies by running the `requirements.txt` file with _pip_: `pip install -r requirements.txt`.
+* Install dependencies by running the `requirements.txt` file with _pip_: `pip install -r requirements.txt`. Doing this in a _virtualenv_ will minimize disruption to other projects.
 
 * Set your scraping parameters in the `config.json` file:
-    * `query_type`: Choose how to query the audio store, either by setting as `search` (regular search) or `tags` (search by a tag).
-    * `query`: The value for the query (cars, birds, conversations, etc.).
-    * `format`: Filter the audio formats to be downloaded (mp3, wav, etc.).
+    * `query_type`: Choose how to query the audio store, either by setting as _search_ (regular search) or _tags_ (search by a tag).
+    * `query`: The value for the query (_cars_, _birds_, _conversations_, etc.).
+    * `format`: Filter the audio formats to be downloaded (_mp3_, _wav_, etc.).
     * `auth`: Cookies values from an active session in [FreeSound](https://freesound.org/), I recommend that you use the [Cookies](https://chrome.google.com/webstore/detail/cookies/iphcomljdfghbkdcfndaijbokpgddeno?hl=en) extension to get them, these are used for requests validation only.
 
 * Run the `scraper.py` file.
