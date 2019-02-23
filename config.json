@@ -1,0 +1,10 @@
+{
+  "query_type": "search",
+  "query": "applauses",
+  "n_pages": 1,
+  "formats": ["wav", "mp3"],
+  "auth": {
+            "csrf": "<your session csrf>",
+            "session": "<your session id>"
+          }
+}
