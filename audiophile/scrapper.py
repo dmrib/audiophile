@@ -12,6 +12,40 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
+SEARCH_QUERY = 'https://freesound.org/search/?q={}&page={}#sound'
+TAGS_QUERY = 'https://freesound.org/browse/tags/{}/?page={}#sound'
+INDEX_FILE_NAME = 'index_{}.html'
+
+
+def get_page(url):
+    """
+    Download a web page and returns it.
+
+    Args:
+        url (str): target webpage url
+    Returns:
+        html (str): page html code
+    """
+    response = requests.get(url)
+    html = response.text
+
+    return html
+
+
+def save_page(page, file_name):
+    """
+    I save a page to a file.
+
+    Args:
+        page (str): page to be saved.
+        file_name (str): saved file name.
+    Returns:
+        None.
+    """
+    with open(file_name, mode='w') as file:
+        file.write(page)
+
+
 def load_config(path):
     """
     Loads a scrapping session configuration parameters from a JSON file.
@@ -56,6 +90,32 @@ def create_data_folders(path):
         print(f"Error: couldn't create folder {path} .")
 
 
+def scrape_indexes(query, query_type, n_pages, destination):
+    """
+    Scraps search results pages.
+
+    Args:
+        query (str): query word
+        query_type (str): type of audio files query.
+        n_pages (int): number of pages to scrape.
+        destination (str): scrapped pages destination folder path.
+    Returns:
+        None.
+    """
+    # select query results base url
+    if query_type == 'search':
+        base_url = SEARCH_QUERY
+    elif query_type == 'tags':
+        base_url = TAGS_QUERY
+
+    # scrape search result pages
+    print('Scraping indexes...')
+    for page_number in tqdm(range(1, n_pages + 1)):
+        url = base_url.format(query, page_number)
+        page = get_page(url)
+        save_page(page, destination + INDEX_FILE_NAME.format(page_number))
+
+
 def scrape(config_path):
     """
     Runs a scrapping session.
@@ -69,4 +129,10 @@ def scrape(config_path):
     parameters = load_config(config_path)
 
     # create data and pages cache destination folder
-    create_data_folders('./data/')
+    base_folder = '../data/{}/'.format(parameters['query'])
+    indexes_folder = base_folder + 'pages/indexes/'
+    create_data_folders(base_folder)
+
+    # scrape search results pages
+    scrape_indexes(parameters['query'], parameters['query_type'],
+                   parameters['n_pages'], indexes_folder)
