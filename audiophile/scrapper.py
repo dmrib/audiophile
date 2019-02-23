@@ -272,4 +272,5 @@ def scrape(config_path):
                          audio_folder)
 
 
-scrape('../config.json')
+if __name__ == '__main__':
+    scrape('../config.json')
