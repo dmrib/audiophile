@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
+BASE_URL = 'https://freesound.org'
 SEARCH_QUERY = 'https://freesound.org/search/?q={}&page={}#sound'
 TAGS_QUERY = 'https://freesound.org/browse/tags/{}/?page={}#sound'
 INDEX_FILE_NAME = 'index_{}.html'
@@ -116,6 +117,33 @@ def scrape_indexes(query, query_type, n_pages, destination):
         save_page(page, destination + INDEX_FILE_NAME.format(page_number))
 
 
+def parse_indexes(source_folder, destination):
+    """
+    Parse indexes pages in a folder for audio pages urls and store in a csv
+    file.
+
+    Args:
+        source_folder (str): index pages source folder
+        destination (str): destination path for csv file.
+    Returns:
+        None.
+    """
+    # get search results pages files paths
+    pages_file_names = glob.glob(source_folder + '*.html')
+
+    # parse search results pages for sound files pages
+    print('Parsing indexes pages...')
+    with open(destination + '/sound_pages_urls.csv', mode='w') as urls_file:
+        writer = csv.writer(urls_file)
+
+        for page_file_name in tqdm(pages_file_names):
+            with open(page_file_name, mode='r') as page_file:
+                soup = BeautifulSoup(page_file, 'lxml')
+                for url in soup.findAll('a', attrs={'class': 'title'}):
+                    page_url = [BASE_URL + url.get('href')]
+                    writer.writerow(page_url)
+
+
 def scrape(config_path):
     """
     Runs a scrapping session.
@@ -128,7 +156,7 @@ def scrape(config_path):
     # load session parameters
     parameters = load_config(config_path)
 
-    # create data and pages cache destination folder
+    # create data and pages cache destination folders
     base_folder = '../data/{}/'.format(parameters['query'])
     indexes_folder = base_folder + 'pages/indexes/'
     create_data_folders(base_folder)
@@ -136,3 +164,9 @@ def scrape(config_path):
     # scrape search results pages
     scrape_indexes(parameters['query'], parameters['query_type'],
                    parameters['n_pages'], indexes_folder)
+
+    # parse search results pages for sound files pages
+    parse_indexes(indexes_folder, base_folder)
+
+
+scrape('../config.json')
